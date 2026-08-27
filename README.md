@@ -19,7 +19,7 @@ A Socket.IO backend owns synchronization, presence, permissions and persistence;
 
 ## Quick Start
 
-Requirements: Node 18+ (24 recommended), Docker (for PostgreSQL), npm.
+Requirements: Node 18+ (24 recommended), Docker (for PostgreSQL), npm.  
 
 ```bash
 # 1. Install dependencies
