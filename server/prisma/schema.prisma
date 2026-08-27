@@ -1,0 +1,189 @@
+// Prisma schema for SyncRoom.
+// The collaboration data model: users, workspaces, documents, versions,
+// comments, activity and notifications.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships   WorkspaceMember[]
+  documents     Document[]          @relation("DocumentAuthor")
+  versions      DocumentVersion[]   @relation("VersionAuthor")
+  comments      Comment[]
+  activities    Activity[]
+  notifications Notification[]
+  ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+
+enum Role {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner     User               @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members   WorkspaceMember[]
+  documents Document[]
+  activity  Activity[]
+  comments  Comment[]
+
+  @@index([ownerId])
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  userId         String
+  role           Role
+  lastAccessedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+// ---------------------------------------------------------------------------
+
+model Document {
+  id          String   @id @default(cuid())
+  workspaceId String
+  title       String
+  // TipTap/ProseMirror JSON document.
+  content     Json
+  // Incremented on every accepted update — the source of truth for
+  // optimistic-concurrency conflict detection.
+  version     Int      @default(1)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User               @relation("DocumentAuthor", fields: [createdById], references: [id])
+  versions  DocumentVersion[]
+  comments  Comment[]
+  activity  Activity[]
+
+  @@index([workspaceId])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id          String   @id @default(cuid())
+  documentId  String
+  version     Int
+  content     Json
+  createdById String
+  createdAt   DateTime @default(now())
+
+  document  Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdBy User     @relation("VersionAuthor", fields: [createdById], references: [id])
+
+  @@unique([documentId, version])
+  @@index([documentId, createdAt])
+  @@map("document_versions")
+}
+
+// ---------------------------------------------------------------------------
+
+model Comment {
+  id          String   @id @default(cuid())
+  documentId  String
+  workspaceId String
+  authorId    String
+  content     String
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  document  Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id])
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([documentId])
+  @@index([workspaceId])
+  @@map("comments")
+}
+
+// ---------------------------------------------------------------------------
+
+enum ActivityType {
+  USER_JOINED
+  USER_LEFT
+  DOCUMENT_UPDATED
+  COMMENT_CREATED
+  COMMENT_REPLIED
+  VERSION_CREATED
+  VERSION_RESTORED
+  MEMBER_INVITED
+  MEMBER_REMOVED
+  WORKSPACE_CREATED
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  workspaceId String
+  actorId     String
+  type        ActivityType
+  message     String
+  documentId  String?
+  createdAt   DateTime     @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  actor     User      @relation(fields: [actorId], references: [id])
+  document  Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@map("activities")
+}
+
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  message     String
+  workspaceId String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}

@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-zinc-50 text-zinc-900 antialiased;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* ------------------------------------------------------------------ */
+/* TipTap editor content                                                */
+/* ------------------------------------------------------------------ */
+
+.prose-editor {
+  @apply max-w-2xl text-[15px] leading-relaxed text-zinc-800;
+}
+
+.prose-editor > * + * {
+  @apply mt-3;
+}
+
+.prose-editor h1 {
+  @apply mb-4 mt-8 text-3xl font-bold tracking-tight text-zinc-900 first:mt-0;
+}
+
+.prose-editor h2 {
+  @apply mb-3 mt-8 text-xl font-semibold tracking-tight text-zinc-900 first:mt-0;
+}
+
+.prose-editor h3 {
+  @apply mb-2 mt-6 text-base font-semibold text-zinc-900 first:mt-0;
+}
+
+.prose-editor p {
+  @apply text-[15px];
+}
+
+.prose-editor ul {
+  @apply list-disc pl-6;
+}
+
+.prose-editor ol {
+  @apply list-decimal pl-6;
+}
+
+.prose-editor ul,
+.prose-editor ol {
+  @apply space-y-1;
+}
+
+.prose-editor blockquote {
+  @apply border-l-2 border-zinc-300 pl-4 italic text-zinc-500;
+}
+
+.prose-editor code {
+  @apply rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[13px] text-rose-600;
+}
+
+.prose-editor pre {
+  @apply overflow-x-auto rounded-lg bg-zinc-900 p-4;
+}
+
+.prose-editor pre code {
+  @apply bg-transparent p-0 text-[13px] text-zinc-100;
+}
+
+.prose-editor hr {
+  @apply my-6 border-zinc-200;
+}
+
+.prose-editor a {
+  @apply text-blue-600 underline;
+}
+
+/* Compact variant used in version previews */
+.prose-editor--compact {
+  @apply text-[13px];
+}
+
+.prose-editor--compact > * + * {
+  @apply mt-2;
+}
+
+.prose-editor--compact h1 {
+  @apply mb-3 mt-5 text-lg;
+}
+
+.prose-editor--compact h2 {
+  @apply mb-2 mt-4 text-base;
+}
+
+.prose-editor--compact p {
+  @apply text-[13px];
+}
+
+/* Placeholder */
+.prose-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply pointer-events-none float-left h-0 text-zinc-300;
+}
+
+/* ------------------------------------------------------------------ */
+/* Scrollbars                                                           */
+/* ------------------------------------------------------------------ */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(212 212 216) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgb(212 212 216);
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

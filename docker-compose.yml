@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: syncroom-postgres
+    environment:
+      POSTGRES_USER: syncroom
+      POSTGRES_PASSWORD: syncroom
+      POSTGRES_DB: syncroom
+    # Host port 5433 (5432 may be taken by other local stacks).
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U syncroom -d syncroom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: syncroom-server
+    environment:
+      DATABASE_URL: "postgresql://syncroom:syncroom@postgres:5432/syncroom?schema=public"
+      JWT_SECRET: "syncroom-local-dev-secret-change-me"
+      JWT_EXPIRES_IN: "7d"
+      PORT: 4000
+      CLIENT_ORIGIN: "http://localhost:8080"
+      NODE_ENV: "production"
+    ports:
+      - "4100:4100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/index.js"
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    container_name: syncroom-client
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+
+volumes:
+  pgdata:
