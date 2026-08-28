@@ -31,13 +31,18 @@ export const useCommentsStore = create<CommentsState>()((set) => ({
   add: (comment) => {
     set((state) => {
       if (comment.parentId) {
-        return {
-          comments: state.comments.map((top) =>
-            top.id === comment.parentId
-              ? { ...top, replies: [...(top.replies ?? []), comment] }
-              : top,
-          ),
-        };
+        const parentExists = state.comments.some((top) => top.id === comment.parentId);
+        if (parentExists) {
+          return {
+            comments: state.comments.map((top) =>
+              top.id === comment.parentId
+                ? { ...top, replies: [...(top.replies ?? []), comment] }
+                : top,
+            ),
+          };
+        }
+        // Parent not loaded yet (e.g. reply arrived before the panel) —
+        // keep the reply as a top-level comment so it isn't dropped.
       }
       return { comments: [...state.comments, comment] };
     });
