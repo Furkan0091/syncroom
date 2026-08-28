@@ -17,9 +17,11 @@ export function initials(name: string): string {
 }
 
 export function avatarColor(name: string): string {
-  let hash = 0;
+  // FNV-1a style hash, kept within 32 bits so the colour is stable for any name length.
+  let hash = 0x811c9dc5;
   for (let i = 0; i < name.length; i++) {
-    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    hash ^= name.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
   }
-  return COLORS[hash % COLORS.length]!;
+  return COLORS[(hash >>> 0) % COLORS.length]!;
 }
