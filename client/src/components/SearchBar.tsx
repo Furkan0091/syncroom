@@ -29,24 +29,29 @@ export function SearchBar() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const requestIdRef = useRef(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!query.trim()) {
+      requestIdRef.current += 1;
       setResults(null);
       setOpen(false);
       return;
     }
     setLoading(true);
+    const requestId = ++requestIdRef.current;
     const timer = setTimeout(async () => {
       try {
         const data = await api<SearchResults>(`/search?q=${encodeURIComponent(query.trim())}`);
+        // Ignore stale responses from superseded requests.
+        if (requestId !== requestIdRef.current) return;
         setResults(data);
         setOpen(true);
       } catch {
-        setResults(null);
+        if (requestId === requestIdRef.current) setResults(null);
       } finally {
-        setLoading(false);
+        if (requestId === requestIdRef.current) setLoading(false);
       }
     }, 250);
     return () => clearTimeout(timer);
