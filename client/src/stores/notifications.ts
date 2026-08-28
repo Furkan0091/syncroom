@@ -44,10 +44,13 @@ export const useNotificationsStore = create<NotificationsState>()((set) => ({
 
   markRead: async (id) => {
     await api(`/notifications/${id}/read`, { method: "POST" });
-    set((state) => ({
-      notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
-      unreadCount: Math.max(0, state.unreadCount - 1),
-    }));
+    set((state) => {
+      const wasUnread = state.notifications.some((n) => n.id === id && !n.read);
+      return {
+        notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+      };
+    });
   },
 
   markAllRead: async () => {
