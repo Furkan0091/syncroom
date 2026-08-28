@@ -1,5 +1,10 @@
+/** Coerces an ISO string or Date into a Date object. */
+function toDate(dateInput: string | Date): Date {
+  return typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+}
+
 export function timeAgo(dateInput: string | Date): string {
-  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  const date = toDate(dateInput);
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
 
   if (seconds < 10) return "just now";
@@ -14,13 +19,11 @@ export function timeAgo(dateInput: string | Date): string {
 }
 
 export function formatTime(dateInput: string | Date): string {
-  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-  return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return toDate(dateInput).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
 export function formatDateTime(dateInput: string | Date): string {
-  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-  return date.toLocaleString(undefined, {
+  return toDate(dateInput).toLocaleString(undefined, {
     month: "short",
     day: "numeric",
     hour: "numeric",
